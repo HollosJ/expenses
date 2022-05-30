@@ -2,6 +2,9 @@ var { src, dest, watch, series, parallel } = require("gulp");
 var sass = require("gulp-sass")(require("sass"));
 var postcss = require("gulp-postcss");
 var browserSync = require("browser-sync").create();
+var uglify = require("gulp-uglify");
+var concat = require("gulp-concat");
+var imageMin = require("gulp-imagemin");
 
 // Tailwind stuff
 function stylesTask() {
@@ -18,7 +21,11 @@ function stylesTask() {
 
 // JS stuff
 function jsTask() {
-  return src("src/js/*.js").pipe(dest("./dist")).pipe(browserSync.stream());
+  return src("src/js/*.js")
+    .pipe(uglify())
+    .pipe(concat("script.js"))
+    .pipe(dest("./dist"))
+    .pipe(browserSync.stream());
 }
 
 // Moves HTML files to the dist folder
@@ -42,19 +49,25 @@ function browserSyncReload(cb) {
   cb();
 }
 
+// Images
+function imagesTask() {
+  return src("src/img/*").pipe(imageMin()).pipe(dest("./dist/img"));
+}
+
 // Watch stuff
 function watchTask() {
   console.log("Watching for changes...");
   watch("src/*.html", series(htmlTask, browserSyncReload));
   watch(["src/*.scss", "src/*.html"], series(stylesTask, browserSyncReload));
-  watch("src/*.js", series(jsTask, browserSyncReload));
+  watch("src/js/*.js", series(jsTask, browserSyncReload));
 }
 
 exports.default = series(
   stylesTask,
   jsTask,
   htmlTask,
+  imagesTask,
   browserSyncServe,
   watchTask
 );
-exports.build = series(stylesTask, jsTask, htmlTask);
+exports.build = series(stylesTask, jsTask, htmlTask, imagesTask);
