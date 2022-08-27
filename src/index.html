@@ -31,6 +31,7 @@
 
         type: 'Mileage',
         expenses: [],
+        name: '',
 
         submit() {
           let form = this.$refs.form;
@@ -72,7 +73,13 @@
 
           // Title of page
           doc.setFontSize(18);
-          doc.text('Your Expenses', 10, row);
+          doc.text(this.name, 10, row);
+
+          // Date
+          let date = new Date();
+          doc.text(date.toLocaleDateString('en-GB'), width - 10, row, {
+            align: 'right',
+          });
           doc.setFontSize(10);
 
           row += 10;
@@ -271,9 +278,28 @@
       </div>
 
       <template x-if="expenses.length">
-        <button class="btn btn--primary" @click="generatePDF">
-          Generate PDF
-        </button>
+        <div class="grid gap-4">
+          <!-- Name field -->
+          <div class="form-row">
+            <label for="name">Full name</label>
+            <input
+              type="text"
+              name="name"
+              id="name"
+              placeholder="John Doe"
+              x-model="name"
+              required
+            />
+          </div>
+
+          <button
+            class="btn btn--primary"
+            @click="generatePDF"
+            x-bind:disabled="name === ''"
+          >
+            Generate PDF
+          </button>
+        </div>
       </template>
     </div>
   </body>
