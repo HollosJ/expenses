@@ -1,7 +1,14 @@
 module.exports = {
-  content: ["./src/*.html"],
+  content: ['./src/*.html'],
   theme: {
-    extend: {},
+    extend: {
+      fontFamily: {
+        sans: ['Poppins', 'sans-serif'],
+      },
+      colors: {
+        jurple: '#7700ff',
+      },
+    },
   },
   plugins: [],
 };

@@ -1,3 +1,53 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+.form-row {
+  @apply grid;
+
+  label {
+    @apply text-lg;
+  }
+
+  input,
+  select,
+  textarea {
+    @apply p-2 border-4 rounded-md;
+
+    &:focus,
+    &:active {
+      @apply border-[#7700ff] outline-0 border-4 border-opacity-25;
+    }
+  }
+}
+
+.btn {
+  @apply px-4 py-2 rounded-md cursor-pointer transition;
+
+  &--primary {
+    @apply bg-gradient-to-br from-jurple to-[#c900ff] text-white;
+    &:hover {
+      @apply opacity-75;
+    }
+  }
+
+  &--secondary {
+    @apply bg-white;
+
+    &:hover {
+      @apply bg-black text-white;
+    }
+  }
+
+  &:disabled {
+    @apply opacity-25 cursor-default;
+  }
+}
+
+.expenses__row {
+  @apply grid grid-cols-3 gap-4;
+
+  span {
+    @apply px-4 py-2;
+  }
+}

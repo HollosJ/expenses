@@ -5,11 +5,294 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Document</title>
+
+    <!-- Font stuff -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Scripts -->
     <link rel="stylesheet" href="main.css" />
+    <script src="//unpkg.com/alpinejs" defer></script>
+    <script src="https://unpkg.com/jspdf@latest/dist/jspdf.umd.min.js"></script>
+
+    <script>
+      data = () => ({
+        locales: 'en-GB',
+        localeOptions: {
+          style: 'currency',
+          currency: 'GBP',
+          maximumFractionDigits: 2,
+          minimumFractionDigits: 2,
+        },
+
+        type: 'Mileage',
+        expenses: [
+          {
+            id: 1,
+            type: 'Mileage',
+            description:
+              'Lorem ipsum dolor sit amet consectetur adipisicing elit. Consectetur, quam.',
+            amount: null,
+            miles: 69,
+            image: null,
+          },
+          {
+            id: 2,
+            type: 'Food/Drink',
+            description:
+              'Lorem ipsum dolor sit amet consectetur adipisicing elit. Consectetur, quam.',
+            amount: 32.99,
+            miles: null,
+            image: null,
+          },
+        ],
+
+        submit() {
+          let form = this.$refs.form;
+
+          // Initial expense build
+          let expense = {
+            id: Date.now(),
+            type: form.type.value,
+            description: form.description.value,
+            amount: form.amount ? Number(form.amount.value) : null,
+            miles: form.miles ? Number(form.miles.value) : null,
+          };
+
+          // If image uploaded, add to expense
+          if (form.receipt) {
+            let image = form.receipt.files[0];
+            let reader = new FileReader();
+            reader.onload = function () {
+              expense.image = reader.result;
+            };
+            reader.readAsDataURL(image);
+          }
+
+          // Add expense to global expenses list
+          this.expenses.push(expense);
+
+          // Reset form
+          form.reset();
+          this.type = 'Mileage';
+        },
+
+        generatePDF() {
+          window.jsPDF = window.jspdf.jsPDF;
+          let doc = new jsPDF();
+
+          let width = doc.internal.pageSize.getWidth();
+
+          let row = 10;
+
+          // Title of page
+          doc.setFontSize(18);
+          doc.text('Your Expenses', 10, row);
+          doc.setFontSize(10);
+
+          row += 10;
+
+          // Table headers
+          doc.setTextColor('#7700ff');
+          doc.setFont('Helvetica', 'bold');
+          doc.text('Type & Description', 10, row);
+          doc.text('Amount', width * 0.75, row);
+          doc.text('Miles', width - 10, row, { align: 'right' });
+          doc.setTextColor('#000000');
+          doc.line(10, row + 4, width - 10, row + 4);
+          row += 10;
+
+          let totalAmount = 0;
+          let totalMiles = 0;
+          // Loop through rows
+          doc.setFont('helvetica', 'normal');
+          this.expenses.forEach((expense) => {
+            doc.setFont('helvetica', 'bold');
+            doc.text(expense.type, 10, row);
+
+            doc.setFont('helvetica', 'normal');
+            // Write amount if necessary
+            if (expense.amount) {
+              doc.text(
+                expense.amount.toLocaleString(this.locales, this.localeOptions),
+                width * 0.75,
+                row
+              );
+              totalAmount += expense.amount;
+            }
+
+            if (expense.miles) {
+              doc.text(expense.miles + 'mi', width - 10, row, 'right');
+              totalMiles += expense.miles;
+            }
+
+            row += 5;
+            doc.text(expense.description, 10, row);
+            row += 10;
+          });
+
+          // Footer
+          doc.setFont('helvetica', 'bold');
+          doc.setFontSize(12);
+          doc.setTextColor('#7700ff');
+          doc.text(
+            totalAmount.toLocaleString(this.locales, this.localeOptions),
+            width * 0.75,
+            row
+          );
+          doc.text(totalMiles + 'mi', width - 10, row, { align: 'right' });
+          row += 10;
+
+          // Receipts
+          let images = [];
+          this.expenses.forEach((expense) => {
+            // If expense has an image, add to image array
+            if (expense.image) {
+              images.push(expense.image);
+            }
+          });
+
+          // Make new page for every receipt uploaded
+          images.forEach((image) => {
+            doc.addPage();
+            doc.addImage(image, 'jpeg', 0, 0, 210, 297);
+          });
+
+          // Save PDF with unique identifier
+          doc.save('expenses-' + Date.now() + '.pdf');
+        },
+      });
+    </script>
   </head>
-  <body class="flex items-center justify-center min-h-screen bg-gray-100">
-    <div class="inline-block px-4 py-2 bg-[#7700ff] rounded-md shadow-md">
-      <h1 class="font-bold text-white">Gulp Tailwind CSS Template</h1>
+  <body class="bg-gray-100">
+    <div class="container grid max-w-xl gap-8 p-4 mx-auto" x-data="data">
+      <form
+        class="grid gap-4"
+        action="javascript:void(0)"
+        x-ref="form"
+        @submit.prevent="submit"
+      >
+        <!-- Type of expense -->
+        <div class="form-row">
+          <label for="type">Type of Expense</label>
+          <select
+            name="type"
+            id="type"
+            class="p-2 border-2 rounded-md cursor-pointer"
+            x-model="type"
+          >
+            <option value="Mileage">Mileage</option>
+            <option value="Food/Drink">Food/Drink</option>
+            <option value="Accommodation">Accommodation</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+
+        <div class="form-row">
+          <label for="description">Description</label>
+          <textarea
+            name="description"
+            id="description"
+            cols="30"
+            rows="5"
+            maxlength="50"
+            required
+          ></textarea>
+        </div>
+
+        <template x-if="type === 'Mileage'">
+          <div class="form-row">
+            <label for="miles">Miles Travelled</label>
+            <input
+              type="number"
+              name="miles"
+              id="miles"
+              placeholder="50"
+              required
+            />
+          </div>
+        </template>
+
+        <template x-if="type !== 'Mileage'">
+          <div class="grid gap-4">
+            <div class="form-row">
+              <label for="amount">Amount</label>
+              <input
+                type="number"
+                name="amount"
+                id="amount"
+                placeholder="9.99"
+                required
+              />
+            </div>
+
+            <div class="form-row">
+              <label for="receipt">Upload receipt</label>
+              <input
+                type="file"
+                accept="image/jpeg, image/png"
+                name="receipt"
+                id="receipt"
+                required
+              />
+            </div>
+          </div>
+        </template>
+
+        <button type="submit" class="btn btn--secondary">Add Expense</button>
+      </form>
+
+      <hr />
+
+      <!-- Expenses list -->
+      <div class="container grid max-w-xl gap-4 mx-auto text-sm">
+        <!-- Header -->
+        <div class="text-gray-400 border-b-2 expenses__row">
+          <span>Type</span>
+          <span>Amount</span>
+          <span>Miles</span>
+        </div>
+
+        <!-- Expenses loop -->
+        <template x-for="expense in expenses" :key="expense.id">
+          <div
+            class="transition bg-white rounded-md shadow-sm cursor-pointer hover:shadow-md hover:-translate-y-1 expenses__row"
+            x-transition
+          >
+            <span x-text="expense.type"></span>
+            <span
+              x-text="expense.amount ? expense.amount.toLocaleString(locales, localeOptions) : ''"
+            ></span>
+            <span x-text="expense.miles ? expense.miles : ''"></span>
+          </div>
+        </template>
+
+        <!-- Empty -->
+        <template x-if="!expenses.length">
+          <div class="font-bold text-center opacity-25">Empty!</div>
+        </template>
+
+        <!-- Footer -->
+        <div class="border-t-2 expenses__row">
+          <span>Totals:</span>
+          <span
+            x-text="expenses.reduce((acc, obj) => acc + obj.amount, 0).toLocaleString(locales, localeOptions)"
+          ></span>
+          <span
+            x-text="expenses.reduce((acc, obj) => acc + obj.miles, 0) + 'mi'"
+          ></span>
+        </div>
+      </div>
+
+      <template x-if="expenses.length">
+        <button class="btn btn--primary" @click="generatePDF">
+          Generate PDF
+        </button>
+      </template>
     </div>
   </body>
 </html>
