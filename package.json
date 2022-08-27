@@ -1,10 +1,11 @@
 {
-  "name": "gulp-tailwind-template",
+  "name": "expenses",
+  "homepage": "https://hollosj.github.io/expenses",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "deploy": "gh-pages -d dist"
   },
   "author": "",
   "license": "ISC",
@@ -23,5 +24,8 @@
     "postcss": "^8.4.14",
     "sass": "^1.51.0",
     "tailwindcss": "^3.0.24"
+  },
+  "dependencies": {
+    "gh-pages": "^4.0.0"
   }
 }
