@@ -48,9 +48,18 @@
           // If image uploaded, add to expense
           if (form.receipt) {
             let image = form.receipt.files[0];
+
             let reader = new FileReader();
             reader.onload = function () {
-              expense.image = reader.result;
+              let i = new Image();
+              i.onload = async () => {
+                expense.image = {
+                  data: reader.result,
+                  width: i.width,
+                  height: i.height,
+                };
+              };
+              i.src = reader.result;
             };
             reader.readAsDataURL(image);
           }
@@ -144,10 +153,10 @@
             }
           });
 
-          // Make new page for every receipt uploaded
+          // Make new page for every receipt uploaded, based on image dimensions
           images.forEach((image) => {
-            doc.addPage();
-            doc.addImage(image, 'jpeg', 0, 0, 210, 297);
+            doc.addPage([image.width, image.height]);
+            doc.addImage(image.data, 'jpeg', 0, 0, image.width, image.height);
           });
 
           // Save PDF with unique identifier
