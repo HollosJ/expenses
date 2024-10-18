@@ -1,3 +1,3 @@
 # Expenses App
 
-An application for generating expenses documents. Data output includes both prices, mileage and receipt images.
+An application for generating expense documents. Data output includes both prices, mileage and receipt images. Built w/ Alpine & Tailwind
